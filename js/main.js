@@ -1,11 +1,11 @@
 
-const COMMENT_MESSAGES_ARRAY = [
+const COMMENT_MESSAGES = [
   'Всё отлично!',
-  'В целом всё неплохо. Но не всё.',
-  'Когда вы делаете фотографию, хорошо бы убирать палец из кадра. В конце концов это просто непрофессионально.',
-  'Моя бабушка случайно чихнула с фотоаппаратом в руках и у неё получилась фотография лучше.',
-  'Я поскользнулся на банановой кожуре и уронил фотоаппарат на кота и у меня получилась фотография лучше.',
-  'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой неудачный момент?!',
+  'В целом всё неплохо. Но не всё.',
+  'Когда вы делаете фотографию, хорошо бы убирать палец из кадра. В конце концов это просто непрофессионально.',
+  'Моя бабушка случайно чихнула с фотоаппаратом в руках и у неё получилась фотография лучше.',
+  'Я поскользнулся на банановой кожуре и уронил фотоаппарат на кота и у меня получилась фотография лучше.',
+  'Лица у людей на фотке перекошены, как будто их избивают. Как можно было поймать такой неудачный момент?!',
 ];
 
 const NAMES = [
@@ -45,7 +45,6 @@ function getRandomUniqueNumberFromRange (min = 1, max = 25) {
   return function () {
     let newUniqueNumber = getRandomInteger(min, max);
     if (previousUniqueNumbersArray.length >= (max - min + 1)) {
-      console.error(`Перебраны все числа из диапазона от ${ min } до ${ max }`);
       return null;
     }
     while (previousUniqueNumbersArray.includes(newUniqueNumber)) {
@@ -68,7 +67,7 @@ const photoID = getRandomUniqueNumberFromRange();
 const imageNameNumber = getRandomUniqueNumberFromRange();
 const commentID = getRandomUniqueNumberFromRange(1, 1000);
 
-function getRandomObject () {
+function getGeneratedPhoto () {
 
   const randomAvatarNumber = getRandomInteger(1, 6);
 
@@ -81,13 +80,16 @@ function getRandomObject () {
       {
         id: commentID(), // Любое число, не должны повторяться
         avatar: `img/avatar-${randomAvatarNumber}.svg`, // Строка, значение которой формируется по правилу img/avatar-{{случайное число от 1 до 6}}.svg. Аватарки подготовлены в директории img
-        message: getRandomElementFromArray(COMMENT_MESSAGES_ARRAY), // Для формирования текста комментария необходимо взять одно или два случайных предложения из массива commentMessagesArray
+        message: getRandomElementFromArray(COMMENT_MESSAGES), // Для формирования текста комментария необходимо взять одно или два случайных предложения из массива commentMessagesArray
         name: getRandomElementFromArray(NAMES), // Должны быть случайными. Набор имён для комментаторов составьте сами
       }
     ],
   };
 }
 
-const randomObjectsArray = Array.from({length: 25}, getRandomObject);
+function generatePhotos () {
+  return Array.from({length: 25}, getGeneratedPhoto);
+}
 
-console.table(randomObjectsArray);
+const randomObjectsArray = generatePhotos();
+
