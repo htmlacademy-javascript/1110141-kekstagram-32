@@ -93,3 +93,4 @@ function generatePhotos () {
 
 const randomObjectsArray = generatePhotos();
 
+console.table(randomObjectsArray);
