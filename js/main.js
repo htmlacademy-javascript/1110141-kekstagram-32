@@ -30,5 +30,3 @@ function generatePhotos (length) {
 }
 
 const randomObjectsArray = generatePhotos(25);
-
-console.table(randomObjectsArray);
