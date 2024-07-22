@@ -1,3 +1,4 @@
+// Добавил в правильную ветку 3.13. Вопросы по объектам и массивам для самопроверки
 import {COMMENT_MESSAGES, NAMES} from '/data.js';
 import {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray} from '/util.js';
 
