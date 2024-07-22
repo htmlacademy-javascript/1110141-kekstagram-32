@@ -30,3 +30,8 @@ function generatePhotos (length) {
 }
 
 const randomObjectsArray = generatePhotos(25);
+
+function gg () {
+  return randomObjectsArray;
+}
+gg();
