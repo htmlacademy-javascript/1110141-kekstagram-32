@@ -1,4 +1,4 @@
-// 4.16. Больше деталей Добавил в правильную ветку
+// 5.14. Модуляция Добавил в правильную ветку
 
 import {COMMENT_MESSAGES, NAMES} from '/data.js';
 import {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray} from '/util.js';
