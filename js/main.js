@@ -1,5 +1,3 @@
-// 5.14. Модуляция Добавил в правильную ветку
-
 import {COMMENT_MESSAGES, NAMES} from '/data.js';
 import {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray} from '/util.js';
 
