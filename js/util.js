@@ -42,4 +42,5 @@ function getRandomElementFromArray (element) {
   return element[getRandomInteger(0, element.length - 1)];
 }
 
+
 export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray};
