@@ -20,6 +20,16 @@ const NAMES = [
   'Вашингтон',
 ];
 
+const PHOTO_DESCRIPTIONS = [
+  'Солнце тонет в воде.',
+  'Котенок, покоряющий мир своим обаянием.',
+  'Весна ожила в каждом цветке.',
+  'Город в свете ночных огней.',
+  'Величие снежных вершин.',
+  'Море и первые лучи солнца.',
+  'Листья шепчут о приходе осени.',
+];
+
 /**
  * Генерирует случайное количество комментариев
  * @returns {Function} - замыкание создания списка комментариев
@@ -51,12 +61,12 @@ const photoID = getRandomUniqueNumberFromRange();
 const imageNameNumber = getRandomUniqueNumberFromRange();
 
 function getGeneratedPhoto () {
-
+  const description = getRandomElementFromArray(PHOTO_DESCRIPTIONS);
   const comments = generateComments();
   return {
     id:   photoID(), // От 1 до 25, не должны повторяться
     url: `photos/${imageNameNumber()}.jpg`, // Адрес картинки вида photos/{{i}}.jpg, где {{i}} — это число от 1 до 25. Адреса картинок не должны повторяться.
-    description: 'description', // Любая строка
+    description: description, // Любая строка
     likes: getRandomInteger(15, 200), // Случайное число от 15 до 200
     comments: comments,
   };
