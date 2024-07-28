@@ -43,4 +43,9 @@ function getRandomElementFromArray (element) {
 }
 
 
-export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray};
+function isEscapeKey (evt) {
+  return evt.key === 'Escape';
+}
+
+
+export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, isEscapeKey};
