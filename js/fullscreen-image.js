@@ -1,94 +1,109 @@
-import {isEscapeKey} from './util.js';
+import { isEscapeKey } from './util.js';
 
 const bigPicture = document.querySelector('.big-picture');
 const pictureCancel = bigPicture.querySelector('#picture-cancel');
+const bigPictureImg = bigPicture.querySelector('.big-picture__img img');
+const likesCount = bigPicture.querySelector('.likes-count');
+const commentShownCount = bigPicture.querySelector('.social__comment-shown-count');
+const comentsTotalCount = bigPicture.querySelector('.social__comment-total-count');
+const commentsList = bigPicture.querySelector('.social__comments');
+const description = bigPicture.querySelector('.social__caption');
+const commentsLoader = bigPicture.querySelector('.comments-loader');
 
-function onDocumentKeydown (evt) {
+/**
+ * Обрабатывает нажатие клавиш на клавиатуре
+ * @param {Event} evt — событие keydown
+ */
+function onDocumentKeydown(evt) {
   if (isEscapeKey(evt)) {
     closeBigPicture();
   }
 }
 
-function openBigPicture () {
+function openBigPicture(getCommentsFragment) {
   bigPicture.classList.remove('hidden');
-
   document.body.classList.add('modal-open');
 
   pictureCancel.addEventListener('click', closeBigPicture);
-  document.addEventListener('keydown', (evt) => onDocumentKeydown(evt));
+  document.addEventListener('keydown', onDocumentKeydown);
+
+  // Добавляем обработчик для commentsLoader
+  commentsLoader.addEventListener('click', getCommentsFragment);
 }
 
-function closeBigPicture () {
+function closeBigPicture(getCommentsFragment) {
   bigPicture.classList.add('hidden');
-
   document.body.classList.remove('modal-open');
 
   pictureCancel.removeEventListener('click', closeBigPicture);
   document.removeEventListener('keydown', onDocumentKeydown);
+
+  // Удаляем обработчик для commentsLoader
+  commentsLoader.removeEventListener('click', getCommentsFragment);
 }
 
-/**
- * Отрисовывает коментарии для большого изображения и возвращает fragment с ними
- * @param {Array} comments — массив объектов комментариев (структура описана в data.js)
- * @param {*} counter — счётчик комментарев (вычисляется в функции bindFullscreenImage)
- * @returns {fragment} — фрагмент с комментариями
- */
-function renderComments (comments, counter) {
-  const commentsTemplate = document.createElement('template');
-  commentsTemplate.innerHTML = '<li class="social__comment"><img class="social__picture" src="" alt="" width="35" height="35"><p class="social__text"></p></li>';
+function renderComments(comments, step = 5) {
+  let commentsRendered = 0;
 
-  const fragment = document.createDocumentFragment();
+  return function () {
+    const fragment = document.createDocumentFragment();
+    const commentsTemplate = document.createElement('template');
+    commentsTemplate.innerHTML = `
+      <li class="social__comment">
+        <img class="social__picture" src="" alt="" width="35" height="35">
+        <p class="social__text"></p>
+      </li>
+    `;
 
-  const templateContent = commentsTemplate.content;
+    const remainingComments = comments.length - commentsRendered;
+    const commentsToShow = Math.min(step, remainingComments);
 
-  for (let i = 0; i <= counter - 1; i++) {
-    const comment = comments[i];
+    for (let i = 0; i < commentsToShow; i++) {
+      const comment = comments[commentsRendered++];
+      const newComment = commentsTemplate.content.cloneNode(true);
+      const socialPicture = newComment.querySelector('.social__picture');
+      const socialText = newComment.querySelector('.social__text');
 
-    const newComment = templateContent.cloneNode(true);
+      socialPicture.src = comment.avatar;
+      socialPicture.alt = comment.name;
+      socialText.textContent = comment.message;
 
-    const socialPicture = newComment.querySelector('.social__picture');
-    const socialText = newComment.querySelector('.social__text');
+      fragment.appendChild(newComment);
+    }
 
-    socialPicture.src = comment.avatar;
-    socialPicture.alt = comment.name;
+    commentsList.appendChild(fragment);
+    commentShownCount.textContent = commentsRendered;
 
-    socialText.textContent = comment.message;
-
-    fragment.append(newComment);
-  }
-
-  return fragment;
+    // Скрыть кнопку загрузки, если все комментарии отображены
+    if (commentsRendered >= comments.length) {
+      commentsLoader.classList.add('hidden');
+    } else {
+      commentsLoader.classList.remove('hidden');
+    }
+  };
 }
 
+function bindFullscreenImage(evt, photoObject) {
+  evt.preventDefault();
 
-function bindFullscreenImage (photoObject) {
-  // Должны ли эти константы быть написаны в начале файла и заглавными буквами?
-  const bigPictureImg = bigPicture.querySelector('.big-picture__img img');
-  const likesCount = bigPicture.querySelector('.likes-count');
-  const commentShownCount = bigPicture.querySelector('.social__comment-shown-count');
-  const comentsTotalCount = bigPicture.querySelector('.social__comment-total-count');
-  const shownCommentsCounter = photoObject.comments.length < 4 ? photoObject.comments.length : 4; // Количество выводимых изначально комментариев
-  const commentsList = bigPicture.querySelector('.social__comments');
-  const commentsFragment = renderComments(photoObject.comments, shownCommentsCounter);
-  const description = bigPicture.querySelector('.social__caption');
-  const commentCount = bigPicture.querySelector('.social__comment-count');
-  const commentsLoader = bigPicture.querySelector('.comments-loader');
+  const getCommentsFragment = renderComments(photoObject.comments, 5);
 
   bigPictureImg.src = photoObject.url;
   likesCount.textContent = photoObject.likes;
 
-  commentShownCount.textContent = shownCommentsCounter;
+  commentShownCount.textContent = 0; // Сначала показано 0 комментариев
   comentsTotalCount.textContent = photoObject.comments.length;
 
-  commentsList.innerHTML = '';
-  commentsList.append(commentsFragment);
+  commentsList.innerHTML = ''; // Очищаем список комментариев
+  getCommentsFragment(); // Отображаем первые комментарии
 
   description.textContent = photoObject.description;
 
-  openBigPicture();
+  openBigPicture(getCommentsFragment);
 
-  commentCount.classList.add('hidden');
-  commentsLoader.classList.add('hidden');
+  // При закрытии окна также удаляем обработчик для commentsLoader
+  // TODO: Короче я запутался к хуям, надо спросить как упростить всю эту балалайку, потому что по-моему оно так быть не должно, но работает
+  pictureCancel.addEventListener('click', () => closeBigPicture(getCommentsFragment));
 }
 
-export {bindFullscreenImage};
+export { bindFullscreenImage };

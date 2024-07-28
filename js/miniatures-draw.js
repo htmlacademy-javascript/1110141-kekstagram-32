@@ -26,7 +26,7 @@ function drawMiniatures (photos) {
     pictureComments.textContent = photoObject.comments.length;
 
     // Можно было бы использовать main.js в качестве точки входа, возвращать из drawMiniatures список миниатюр и через делегирование с передачей сгенерированного массива объектов изображений добавлять слушатель, но непонятно как связать кликнутую миниатюру и объект массива (если только не добавлять в вёрстку data-id атрибут, но я хз можно ли так. UPD: Антон сказал что можно, но можно как-то решить этот вопрос через замыкания, пока хз как)
-    newPictureElement.addEventListener('click', () => bindFullscreenImage(photoObject));
+    newPictureElement.addEventListener('click', (evt) => bindFullscreenImage(evt, photoObject));
 
     fragment.appendChild(newPictureElement);
   });
