@@ -1,6 +1,6 @@
-import {generatePhotos} from './data.js';
+import { generatePhotos } from './data.js';
 import { drawMiniatures } from './miniatures-draw.js';
 
-const randomObjectsArray = generatePhotos(25);
+const generatedPhotos = generatePhotos(25);
 
-drawMiniatures(randomObjectsArray);
+drawMiniatures(generatedPhotos);
