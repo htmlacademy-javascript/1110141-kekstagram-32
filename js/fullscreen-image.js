@@ -1,109 +1,111 @@
 import { isEscapeKey } from './util.js';
 
-const bigPicture = document.querySelector('.big-picture');
-const pictureCancel = bigPicture.querySelector('#picture-cancel');
-const bigPictureImg = bigPicture.querySelector('.big-picture__img img');
-const likesCount = bigPicture.querySelector('.likes-count');
-const commentShownCount = bigPicture.querySelector('.social__comment-shown-count');
-const comentsTotalCount = bigPicture.querySelector('.social__comment-total-count');
-const commentsList = bigPicture.querySelector('.social__comments');
-const description = bigPicture.querySelector('.social__caption');
-const commentsLoader = bigPicture.querySelector('.comments-loader');
+const COMMENTS_RENDER_NUMBER = 5;
+
+const bigPictureElement = document.querySelector('.big-picture');
+const cancelPictureButton = bigPictureElement.querySelector('#picture-cancel');
+const bigPictureImage = bigPictureElement.querySelector('.big-picture__img img');
+const likesCountElement = bigPictureElement.querySelector('.likes-count');
+const shownCommentsCountElement = bigPictureElement.querySelector('.social__comment-shown-count');
+const totalCommentsCountElement = bigPictureElement.querySelector('.social__comment-total-count');
+const commentsListElement = bigPictureElement.querySelector('.social__comments');
+const descriptionElement = bigPictureElement.querySelector('.social__caption');
+const commentsLoaderButton = bigPictureElement.querySelector('.comments-loader');
+const commentTemplateElement = document.querySelector('.social__comment');
 
 /**
- * Обрабатывает нажатие клавиш на клавиатуре
- * @param {Event} evt — событие keydown
+ * Обрабатывает событие нажатия клавиш на клавиатуре.
+ * @param {Event} event - Событие keydown.
  */
-function onDocumentKeydown(evt) {
-  if (isEscapeKey(evt)) {
+function handleDocumentKeydown(event) {
+  if (isEscapeKey(event)) {
     closeBigPicture();
   }
 }
 
-function openBigPicture(getCommentsFragment) {
-  bigPicture.classList.remove('hidden');
+/**
+ * Открывает окно с большой фотографией.
+ * @param {Function} commentsFragmentFunction - Функция для рендеринга фрагмента комментариев.
+ */
+function openBigPicture(commentsFragmentFunction) {
+  bigPictureElement.classList.remove('hidden');
   document.body.classList.add('modal-open');
 
-  pictureCancel.addEventListener('click', closeBigPicture);
-  document.addEventListener('keydown', onDocumentKeydown);
+  cancelPictureButton.addEventListener('click', closeBigPicture);
+  document.addEventListener('keydown', handleDocumentKeydown);
 
-  // Добавляем обработчик для commentsLoader
-  commentsLoader.addEventListener('click', getCommentsFragment);
+  commentsLoaderButton.addEventListener('click', commentsFragmentFunction);
 }
 
-function closeBigPicture(getCommentsFragment) {
-  bigPicture.classList.add('hidden');
+/**
+ * Закрывает окно с большой фотографией.
+ * @param {Function} commentsFragmentFunction - Функция для рендеринга фрагмента комментариев.
+ */
+function closeBigPicture() {
+  bigPictureElement.classList.add('hidden');
   document.body.classList.remove('modal-open');
-
-  pictureCancel.removeEventListener('click', closeBigPicture);
-  document.removeEventListener('keydown', onDocumentKeydown);
-
-  // Удаляем обработчик для commentsLoader
-  commentsLoader.removeEventListener('click', getCommentsFragment);
 }
 
-function renderComments(comments, step = 5) {
-  let commentsRendered = 0;
+/**
+ * Рендерит комментарии по шагам.
+ * @param {Array} commentsArray - Массив комментариев.
+ * @param {number} [step=COMMENTS_RENDER_NUMBER] - Количество комментариев для рендеринга за шаг.
+ * @returns {Function} - Функция, которая рендерит следующую порцию комментариев.
+ */
+function renderComments(commentsArray, step = COMMENTS_RENDER_NUMBER) {
+  let renderedCommentsCount = 0;
 
   return function () {
     const fragment = document.createDocumentFragment();
-    const commentsTemplate = document.createElement('template');
-    commentsTemplate.innerHTML = `
-      <li class="social__comment">
-        <img class="social__picture" src="" alt="" width="35" height="35">
-        <p class="social__text"></p>
-      </li>
-    `;
 
-    const remainingComments = comments.length - commentsRendered;
-    const commentsToShow = Math.min(step, remainingComments);
+    const remainingCommentsCount = commentsArray.length - renderedCommentsCount;
+    const commentsToShowCount = Math.min(step, remainingCommentsCount);
 
-    for (let i = 0; i < commentsToShow; i++) {
-      const comment = comments[commentsRendered++];
-      const newComment = commentsTemplate.content.cloneNode(true);
-      const socialPicture = newComment.querySelector('.social__picture');
-      const socialText = newComment.querySelector('.social__text');
+    for (let i = 0; i < commentsToShowCount; i++) {
+      const comment = commentsArray[renderedCommentsCount++];
+      const newComment = commentTemplateElement.cloneNode(true);
+      const socialPictureElement = newComment.querySelector('.social__picture');
+      newComment.querySelector('.social__text').textContent = comment.message;
 
-      socialPicture.src = comment.avatar;
-      socialPicture.alt = comment.name;
-      socialText.textContent = comment.message;
+      socialPictureElement.src = comment.avatar;
+      socialPictureElement.alt = comment.name;
 
       fragment.appendChild(newComment);
     }
 
-    commentsList.appendChild(fragment);
-    commentShownCount.textContent = commentsRendered;
+    commentsListElement.appendChild(fragment);
+    shownCommentsCountElement.textContent = renderedCommentsCount;
 
-    // Скрыть кнопку загрузки, если все комментарии отображены
-    if (commentsRendered >= comments.length) {
-      commentsLoader.classList.add('hidden');
+    if (renderedCommentsCount >= commentsArray.length) {
+      commentsLoaderButton.classList.add('hidden');
     } else {
-      commentsLoader.classList.remove('hidden');
+      commentsLoaderButton.classList.remove('hidden');
     }
   };
 }
 
-function bindFullscreenImage(evt, photoObject) {
-  evt.preventDefault();
+/**
+ * Привязывает функциональность полноэкранного изображения.
+ * @param {Event} event - Объект события.
+ * @param {Object} photoData - Данные фотографии.
+ */
+function handleOpenFullscreenImage(event, photoData) {
+  event.preventDefault();
 
-  const getCommentsFragment = renderComments(photoObject.comments, 5);
+  const commentsFragmentFunction = renderComments(photoData.comments, COMMENTS_RENDER_NUMBER);
 
-  bigPictureImg.src = photoObject.url;
-  likesCount.textContent = photoObject.likes;
+  bigPictureImage.src = photoData.url;
+  likesCountElement.textContent = photoData.likes;
 
-  commentShownCount.textContent = 0; // Сначала показано 0 комментариев
-  comentsTotalCount.textContent = photoObject.comments.length;
+  shownCommentsCountElement.textContent = 0;
+  totalCommentsCountElement.textContent = photoData.comments.length;
 
-  commentsList.innerHTML = ''; // Очищаем список комментариев
-  getCommentsFragment(); // Отображаем первые комментарии
+  commentsListElement.innerHTML = '';
+  commentsFragmentFunction();
 
-  description.textContent = photoObject.description;
+  descriptionElement.textContent = photoData.description;
 
-  openBigPicture(getCommentsFragment);
-
-  // При закрытии окна также удаляем обработчик для commentsLoader
-  // TODO: Короче я запутался к хуям, надо спросить как упростить всю эту балалайку, потому что по-моему оно так быть не должно, но работает
-  pictureCancel.addEventListener('click', () => closeBigPicture(getCommentsFragment));
+  openBigPicture(commentsFragmentFunction);
 }
 
-export { bindFullscreenImage };
+export { handleOpenFullscreenImage };
