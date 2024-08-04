@@ -1,4 +1,4 @@
-import { isEscapeKey } from './util.js';
+import { handleDocumentKeydown, closeOverlay } from './util.js';
 
 const COMMENTS_RENDER_NUMBER = 5;
 
@@ -13,15 +13,8 @@ const descriptionElement = bigPictureElement.querySelector('.social__caption');
 const commentsLoaderButton = bigPictureElement.querySelector('.comments-loader');
 const commentTemplateElement = document.querySelector('.social__comment');
 
-/**
- * Обрабатывает событие нажатия клавиш на клавиатуре.
- * @param {Event} event - Событие keydown.
- */
-function handleDocumentKeydown(event) {
-  if (isEscapeKey(event)) {
-    closeBigPicture();
-  }
-}
+cancelPictureButton.addEventListener('click', () => closeOverlay(bigPictureElement));
+document.addEventListener('keydown', (evt) => handleDocumentKeydown(evt, bigPictureElement));
 
 /**
  * Открывает окно с большой фотографией.
@@ -31,19 +24,7 @@ function openBigPicture(commentsFragmentFunction) {
   bigPictureElement.classList.remove('hidden');
   document.body.classList.add('modal-open');
 
-  cancelPictureButton.addEventListener('click', closeBigPicture);
-  document.addEventListener('keydown', handleDocumentKeydown);
-
   commentsLoaderButton.addEventListener('click', commentsFragmentFunction);
-}
-
-/**
- * Закрывает окно с большой фотографией.
- * @param {Function} commentsFragmentFunction - Функция для рендеринга фрагмента комментариев.
- */
-function closeBigPicture() {
-  bigPictureElement.classList.add('hidden');
-  document.body.classList.remove('modal-open');
 }
 
 /**
