@@ -42,10 +42,54 @@ function getRandomElementFromArray (element) {
   return element[getRandomInteger(0, element.length - 1)];
 }
 
+/**
+ * Закрывает переданный элемент оверлея
+ * @param {Element} overlayElement - элемент оверлея, который нужно закрыть
+ */
+function closeOverlay(overlayElement) {
+  if (overlayElement) {
+    overlayElement.classList.add('hidden');
+    document.body.classList.remove('modal-open');
+  }
+  if (overlayElement.classList.contains('img-upload__overlay')) {
+    const overlayPreviewImage = overlayElement.querySelector('.img-upload__preview img');
+    const hashtagsInput = overlayElement.querySelector('.text__hashtags');
+    const deafultImageSrc = overlayPreviewImage.src;
+    const descriptionTextarea = overlayElement.querySelector('.text__description');
+    const effectsInputs = overlayElement.querySelectorAll('.effects__list input');
+    hashtagsInput.value = '';
+    overlayPreviewImage.src = deafultImageSrc;
+    descriptionTextarea.value = '';
+    effectsInputs.forEach((input) => {
+      if (input.id === 'effect-none') {
+        input.checked = true;
+      } else {
+        input.checked = false;
+      }
+    });
+  }
+}
 
-function isEscapeKey (evt) {
+/**
+ * Обрабатывает событие нажатия клавиш на клавиатуре.
+ * @param {Event} event - Событие keydown.
+ * @param {Element} overlayElement - элемент оверлея, который нужно закрыть
+ */
+function handleDocumentKeydown(event, overlayElement) {
+  const hashtagsInput = document.querySelector('.text__hashtags');
+  const descriptionTextarea = document.querySelector('.text__description');
+  if (isEscapeKey(event) && overlayElement && document.activeElement !== hashtagsInput && document.activeElement !== descriptionTextarea) {
+    closeOverlay(overlayElement);
+  }
+}
+
+/**
+ * Проверяет была ли нажата кнопка Escape
+ * @param {Event} evt - событие keydown
+ * @returns {boolean} - возвращает true, если была нажата кнопка Escape
+ */
+function isEscapeKey(evt) {
   return evt.key === 'Escape';
 }
 
-
-export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, isEscapeKey};
+export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, handleDocumentKeydown, closeOverlay};
