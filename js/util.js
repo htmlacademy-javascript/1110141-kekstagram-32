@@ -51,24 +51,8 @@ function closeOverlay(overlayElement) {
     overlayElement.classList.add('hidden');
     document.body.classList.remove('modal-open');
   }
-  if (overlayElement.classList.contains('img-upload__overlay')) {
-    const overlayPreviewImage = overlayElement.querySelector('.img-upload__preview img');
-    const hashtagsInput = overlayElement.querySelector('.text__hashtags');
-    const deafultImageSrc = overlayPreviewImage.src;
-    const descriptionTextarea = overlayElement.querySelector('.text__description');
-    const effectsInputs = overlayElement.querySelectorAll('.effects__list input');
-    hashtagsInput.value = '';
-    overlayPreviewImage.src = deafultImageSrc;
-    descriptionTextarea.value = '';
-    effectsInputs.forEach((input) => {
-      if (input.id === 'effect-none') {
-        input.checked = true;
-      } else {
-        input.checked = false;
-      }
-    });
-  }
 }
+
 
 /**
  * Обрабатывает событие нажатия клавиш на клавиатуре.
