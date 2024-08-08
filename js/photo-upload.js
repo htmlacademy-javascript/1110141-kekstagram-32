@@ -1,18 +1,128 @@
-import { handleDocumentKeydown, closeOverlay } from './util.js';
+import { closeModal } from './util.js';
+import { sendData } from './api.js';
 
 const HASHTAGS_MAX_COUNT = 5;
 const DESCRIPTION_MAX_LENGTH = 140;
+const EFFECTS = {
+  none: { filter: 'none', min: 0, max: 100, step: 1, unit: '' },
+  chrome: { filter: 'grayscale', min: 0, max: 1, step: 0.1, unit: '' },
+  sepia: { filter: 'sepia', min: 0, max: 1, step: 0.1, unit: '' },
+  marvin: { filter: 'invert', min: 0, max: 100, step: 1, unit: '%' },
+  phobos: { filter: 'blur', min: 0, max: 3, step: 0.1, unit: 'px' },
+  heat: { filter: 'brightness', min: 1, max: 3, step: 0.1, unit: '' },
+};
 
-const uploadPhotoOverlay = document.querySelector('.img-upload__overlay');
-const uploadCancel = uploadPhotoOverlay.querySelector('#upload-cancel');
+const uploadPhotoForm = document.querySelector('.img-upload__overlay');
+const uploadCancel = uploadPhotoForm.querySelector('#upload-cancel');
 const uploadImageForm = document.querySelector('.img-upload__form');
 
-document.addEventListener('keydown', (evt) => handleDocumentKeydown(evt, uploadPhotoOverlay));
-uploadCancel.addEventListener('click', () => closeOverlay(uploadPhotoOverlay));
+const smallerScaleButton = uploadImageForm.querySelector('.scale__control--smaller');
+const biggerScaleButton = uploadImageForm.querySelector('.scale__control--bigger');
+const scaleValueElement = uploadImageForm.querySelector('.scale__control--value');
+const previewImage = uploadPhotoForm.querySelector('.img-upload__preview img');
 
-// Пока что временно экспортируем эту функцию, потом модуль будет экспортировать изображение для вставки в сетку
+const effectLevelSlider = document.querySelector('.effect-level__slider');
+const effectLevelValue = document.querySelector('.effect-level__value');
+const effectLevelContainer = document.querySelector('.img-upload__effect-level');
+const effectsInputs = uploadPhotoForm.querySelectorAll('.effects__list input');
+
+// Инициализация слайдера
+noUiSlider.create(effectLevelSlider, {
+  range: {
+    min: 0,
+    max: 100
+  },
+  start: 100,
+  step: 1,
+  connect: 'lower',
+});
+
+// При изменении слайдера изменяем насыщенность фильтров
+effectLevelSlider.noUiSlider.on('change', () => {
+  const currentEffect = EFFECTS[uploadImageForm.querySelector('.effects__radio:checked').value];
+  const currentValue = effectLevelSlider.noUiSlider.get();
+  previewImage.style.filter = `${currentEffect.filter}(${currentValue}${currentEffect.unit})`;
+  effectLevelValue.value = parseFloat(currentValue);
+});
+
+// При клике по кнопкам фильтров уровень насыщенности сбрасывается до начального значения (100%): слайдер, фильтр изображения и значение поля обновляются, а если указан "Оригинал" — фильтр сбрасывается, а слайдер скрывается
+// TODO: Узнать, какое значение должно записываться в поле, если указан фильтр "Оригинал"
+uploadPhotoForm.querySelector('.effects__list').addEventListener('click', (event) => {
+  const target = event.target;
+  if (target.classList.contains('effects__radio')) {
+    const targetValue = target.value;
+    if (targetValue !== 'none') {
+      effectLevelContainer.style.display = 'block';
+      effectLevelSlider.noUiSlider.updateOptions({
+        range: {
+          min: EFFECTS[targetValue].min,
+          max: EFFECTS[targetValue].max,
+        },
+        start: EFFECTS[targetValue].max,
+        step: EFFECTS[targetValue].step,
+      });
+      previewImage.style.filter = `${EFFECTS[targetValue].filter}(${EFFECTS[targetValue].max}${EFFECTS[targetValue].unit})`;
+      effectLevelValue.value = parseFloat(EFFECTS[targetValue].max);
+    } else {
+      previewImage.style.filter = 'none';
+      effectLevelContainer.style.display = 'none';
+    }
+  }
+});
+
+
+// TODO: Клик по кнокам скейла можно переделать делегированием
+/**
+ * Увеличивает скейл изображения-превью
+ */
+function handleUpScale () {
+  const scaleValue = parseInt(scaleValueElement.value, 10);
+  if (scaleValue < 100) {
+    const newScaleValue = scaleValue + 25;
+    scaleValueElement.value = `${newScaleValue}%`;
+    previewImage.style.transform = `scale(${newScaleValue / 100})`;
+  }
+}
+
+/**
+ * Уменьшает скейл изображения-превью
+ */
+function handleDownScale () {
+  const scaleValue = parseInt(scaleValueElement.value, 10);
+  if (scaleValue > 25) {
+    const newScaleValue = scaleValue - 25;
+    scaleValueElement.value = `${newScaleValue}%`;
+    previewImage.style.transform = `scale(${newScaleValue / 100})`;
+  }
+}
+
+/**
+ * Закрываем и чистим (приводим в стандартное значение) форму
+ */
+function closeAndCleanForm () {
+  closeModal(uploadPhotoForm);
+
+  document.querySelector('.img-upload__preview img').style.transform = 'scale(1)';
+  uploadPhotoForm.querySelector('.text__hashtags').value = '';
+  uploadPhotoForm.querySelector('.text__description').value = '';
+
+  // TODO: Узнать можно ли просто инициализировать клик по кнопке "Оригинал" или это костыль
+  effectsInputs.forEach((input) => {
+    input.checked = input.id === 'effect-none';
+  });
+
+  previewImage.style.filter = 'none';
+  effectLevelContainer.style.display = 'none';
+}
+
+biggerScaleButton.addEventListener('click', handleUpScale);
+smallerScaleButton.addEventListener('click', handleDownScale);
+
+uploadCancel.addEventListener('click', closeAndCleanForm);
+
+// Пока что временно экспортируем эту функцию, потом модуль будет экспортировать изображение для вставки в сетку (или нет 🤡)
 function handleUploadPhoto() {
-  uploadPhotoOverlay.classList.remove('hidden');
+  uploadPhotoForm.classList.remove('hidden');
   document.body.classList.add('modal-open');
 }
 
@@ -44,10 +154,8 @@ function validateHashtags(value) {
   }
 
   const hashtags = value.split(' ');
-
   const RegExp = /^#[a-zа-яё0-9]{1,19}$/i;
 
-  // Проверка на валидность каждого хештега
   const allValid = hashtags.every((el) => RegExp.test(el));
 
   if (!allValid) {
@@ -101,10 +209,37 @@ function checkDescriptionLength (value) {
 
 pristine.addValidator(uploadImageForm.querySelector('.text__description'), checkDescriptionLength, 'Длина комментария больше 140 символов');
 
+// Обработка submit-а формы
 uploadImageForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
+
   if (!pristine.validate()) {
     throw new Error('Валидация не прошла');
+  } else {
+    // Если валидация прошла — отсылаем аякс запрос
+    const formData = new FormData(evt.target);
+    sendData(formData)
+      // Если успех — чистим и закрываем форму
+      .then(() => closeAndCleanForm)
+      .catch(() => {
+        // Если ошибка — показываем соответствующую ошибку
+        document.body.append(document.querySelector('#error').content.cloneNode(true));
+        const errorBlock = document.querySelector('.error');
+        const errorInner = errorBlock.querySelector('.error__inner');
+
+        // Обработчик клика по документу
+        document.addEventListener('click', (event) => {
+          // Проверяем, был ли клик вне блока .error__inner
+          if (!errorInner.contains(event.target) && event.target !== errorBlock.querySelector('.error__button')) {
+            errorBlock.remove(); // Удаляем блок ошибки
+          }
+        });
+
+        // Обработчик клика по кнопке закрытия ошибки
+        errorBlock.querySelector('.error__button').addEventListener('click', () => {
+          errorBlock.remove(); // Удаляем блок ошибки
+        });
+      });
   }
 });
 

@@ -1,4 +1,4 @@
-import { handleDocumentKeydown, closeOverlay } from './util.js';
+import { closeModal } from './util.js';
 
 const COMMENTS_RENDER_NUMBER = 5;
 
@@ -13,8 +13,7 @@ const descriptionElement = bigPictureElement.querySelector('.social__caption');
 const commentsLoaderButton = bigPictureElement.querySelector('.comments-loader');
 const commentTemplateElement = document.querySelector('.social__comment');
 
-cancelPictureButton.addEventListener('click', () => closeOverlay(bigPictureElement));
-document.addEventListener('keydown', (evt) => handleDocumentKeydown(evt, bigPictureElement));
+cancelPictureButton.addEventListener('click', () => closeModal(bigPictureElement));
 
 /**
  * Открывает окно с большой фотографией.
