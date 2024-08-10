@@ -43,27 +43,33 @@ function getRandomElementFromArray (element) {
 }
 
 /**
- * Закрывает переданный элемент оверлея
- * @param {Element} overlayElement - элемент оверлея, который нужно закрыть
+ * Закрывает переданный элемент
+ * @param {Element} modalElement - элемент, который нужно закрыть
  */
-function closeOverlay(overlayElement) {
-  if (overlayElement) {
-    overlayElement.classList.add('hidden');
+function closeModal(modalElement) {
+  if (modalElement) {
+    modalElement.classList.add('hidden');
     document.body.classList.remove('modal-open');
   }
 }
 
-
 /**
  * Обрабатывает событие нажатия клавиш на клавиатуре.
  * @param {Event} event - Событие keydown.
- * @param {Element} overlayElement - элемент оверлея, который нужно закрыть
  */
-function handleDocumentKeydown(event, overlayElement) {
+function handleDocumentKeydown(event) {
   const hashtagsInput = document.querySelector('.text__hashtags');
   const descriptionTextarea = document.querySelector('.text__description');
-  if (isEscapeKey(event) && overlayElement && document.activeElement !== hashtagsInput && document.activeElement !== descriptionTextarea) {
-    closeOverlay(overlayElement);
+  if (isEscapeKey(event)) {
+    if (document.querySelector('.error')) {
+      document.querySelector('.error').remove();
+    } else if (!document.querySelector('.img-upload__overlay').classList.contains('hidden') && (document.activeElement !== hashtagsInput || document.activeElement !== descriptionTextarea)) {
+      closeModal(document.querySelector('.img-upload__overlay'));
+    }
+
+    if (!document.querySelector('.big-picture').classList.contains('hidden')) {
+      closeModal(document.querySelector('.big-picture'));
+    }
   }
 }
 
@@ -76,4 +82,4 @@ function isEscapeKey(evt) {
   return evt.key === 'Escape';
 }
 
-export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, handleDocumentKeydown, closeOverlay};
+export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, handleDocumentKeydown, closeModal};
