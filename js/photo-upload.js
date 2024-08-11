@@ -1,9 +1,13 @@
 import { closeModal } from './util.js';
 import { sendData } from './api.js';
 
+const SCALE_MAX_VALUE = 100;
+const SCALE_MIN_VALUE = 25;
+const SCALE_STEP = 25;
+
 const HASHTAGS_MAX_COUNT = 5;
 const DESCRIPTION_MAX_LENGTH = 140;
-const EFFECTS = {
+const Effects = {
   none: { filter: 'none', min: 0, max: 100, step: 1, unit: '' },
   chrome: { filter: 'grayscale', min: 0, max: 1, step: 0.1, unit: '' },
   sepia: { filter: 'sepia', min: 0, max: 1, step: 0.1, unit: '' },
@@ -38,8 +42,8 @@ noUiSlider.create(effectLevelSlider, {
 });
 
 // При изменении слайдера изменяем насыщенность фильтров
-effectLevelSlider.noUiSlider.on('change', () => {
-  const currentEffect = EFFECTS[uploadImageForm.querySelector('.effects__radio:checked').value];
+effectLevelSlider.noUiSlider.on('slide', () => {
+  const currentEffect = Effects[uploadImageForm.querySelector('.effects__radio:checked').value];
   const currentValue = effectLevelSlider.noUiSlider.get();
   previewImage.style.filter = `${currentEffect.filter}(${currentValue}${currentEffect.unit})`;
   effectLevelValue.value = parseFloat(currentValue);
@@ -55,14 +59,14 @@ uploadPhotoForm.querySelector('.effects__list').addEventListener('click', (event
       effectLevelContainer.style.display = 'block';
       effectLevelSlider.noUiSlider.updateOptions({
         range: {
-          min: EFFECTS[targetValue].min,
-          max: EFFECTS[targetValue].max,
+          min: Effects[targetValue].min,
+          max: Effects[targetValue].max,
         },
-        start: EFFECTS[targetValue].max,
-        step: EFFECTS[targetValue].step,
+        start: Effects[targetValue].max,
+        step: Effects[targetValue].step,
       });
-      previewImage.style.filter = `${EFFECTS[targetValue].filter}(${EFFECTS[targetValue].max}${EFFECTS[targetValue].unit})`;
-      effectLevelValue.value = parseFloat(EFFECTS[targetValue].max);
+      previewImage.style.filter = `${Effects[targetValue].filter}(${Effects[targetValue].max}${Effects[targetValue].unit})`;
+      effectLevelValue.value = parseFloat(Effects[targetValue].max);
     } else {
       previewImage.style.filter = 'none';
       effectLevelContainer.style.display = 'none';
@@ -77,8 +81,8 @@ uploadPhotoForm.querySelector('.effects__list').addEventListener('click', (event
  */
 function handleUpScale () {
   const scaleValue = parseInt(scaleValueElement.value, 10);
-  if (scaleValue < 100) {
-    const newScaleValue = scaleValue + 25;
+  if (scaleValue < SCALE_MAX_VALUE) {
+    const newScaleValue = scaleValue + SCALE_STEP;
     scaleValueElement.value = `${newScaleValue}%`;
     previewImage.style.transform = `scale(${newScaleValue / 100})`;
   }
@@ -89,8 +93,8 @@ function handleUpScale () {
  */
 function handleDownScale () {
   const scaleValue = parseInt(scaleValueElement.value, 10);
-  if (scaleValue > 25) {
-    const newScaleValue = scaleValue - 25;
+  if (scaleValue > SCALE_MIN_VALUE) {
+    const newScaleValue = scaleValue - SCALE_STEP;
     scaleValueElement.value = `${newScaleValue}%`;
     previewImage.style.transform = `scale(${newScaleValue / 100})`;
   }
@@ -123,6 +127,7 @@ uploadCancel.addEventListener('click', closeAndCleanForm);
 // Пока что временно экспортируем эту функцию, потом модуль будет экспортировать изображение для вставки в сетку (или нет 🤡)
 function handleUploadPhoto() {
   uploadPhotoForm.classList.remove('hidden');
+  effectLevelContainer.style.display = 'none';
   document.body.classList.add('modal-open');
 }
 
@@ -209,31 +214,60 @@ function checkDescriptionLength (value) {
 
 pristine.addValidator(uploadImageForm.querySelector('.text__description'), checkDescriptionLength, 'Длина комментария больше 140 символов');
 
+/**
+ * Создаёт элемент из шаблона (ошибка или успех), добавляет в body и возвращает этот элемент
+ * @param {string} type Тип элемента ('error' или 'success')
+ * @returns {Element} Созданный элемент
+ */
+function showFetchMessage(type) {
+  document.body.append(document.querySelector(`#${type}`).content.cloneNode(true));
+  return document.querySelector(`.${type}`);
+}
+
+/**
+ * Слушатель проверяет все клики по документу. Если клик НЕ по внутреннему блоку или его дочерним элементам — удаляет блок, а затем и сам слушатель
+ * @param {Event} event Событие клика по документу
+ * @param {Element} messageBlock Элемент, который нужно закрыть (ошибка или успех)
+ * @param {string} type Тип блока ('error' или 'success')
+ */
+function handleCloseMessageOnDocumentClick(event, messageBlock, type) {
+  const innerBlockClass = `.${type}__inner`;
+  const buttonClass = `.${type}__button`;
+
+  // Проверяем, был ли клик вне внутреннего блока
+  if (!messageBlock.querySelector(innerBlockClass).contains(event.target) && event.target !== messageBlock.querySelector(buttonClass)) {
+    messageBlock.remove(); // Удаляем блок
+    document.removeEventListener('click', (e) => handleCloseMessageOnDocumentClick(e, messageBlock, type));
+  }
+}
+
 // Обработка submit-а формы
 uploadImageForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
 
-  if (!pristine.validate()) {
-    throw new Error('Валидация не прошла');
-  } else {
+  if (pristine.validate()) {
     // Если валидация прошла — отсылаем аякс запрос
     const formData = new FormData(evt.target);
     sendData(formData)
       // Если успех — чистим и закрываем форму
-      .then(() => closeAndCleanForm)
-      .catch(() => {
-        // Если ошибка — показываем соответствующую ошибку
-        document.body.append(document.querySelector('#error').content.cloneNode(true));
-        const errorBlock = document.querySelector('.error');
-        const errorInner = errorBlock.querySelector('.error__inner');
+      .then(() => {
+        closeAndCleanForm();
+        const successBlock = showFetchMessage('success');
 
         // Обработчик клика по документу
-        document.addEventListener('click', (event) => {
-          // Проверяем, был ли клик вне блока .error__inner
-          if (!errorInner.contains(event.target) && event.target !== errorBlock.querySelector('.error__button')) {
-            errorBlock.remove(); // Удаляем блок ошибки
-          }
+        document.addEventListener('click', (event) => handleCloseMessageOnDocumentClick(event, successBlock, 'success'));
+
+        // Обработчик клика по кнопке закрытия
+        successBlock.querySelector('.success__button').addEventListener('click', () => {
+          successBlock.remove(); // Удаляем блок успеха
         });
+      })
+      .catch(() => {
+        // Если ошибка — показываем соответствующую ошибку
+        const errorBlock = showFetchMessage('error');
+
+        // Обработчик клика по документу
+        document.addEventListener('click', (event) => handleCloseMessageOnDocumentClick(event, errorBlock, 'error'));
 
         // Обработчик клика по кнопке закрытия ошибки
         errorBlock.querySelector('.error__button').addEventListener('click', () => {
@@ -243,4 +277,12 @@ uploadImageForm.addEventListener('submit', (evt) => {
   }
 });
 
-export { handleUploadPhoto };
+
+/**
+ * Инициализация слушателя поля загрузки изображений
+ */
+function initUploadPhotoInput () {
+  document.querySelector('.img-upload__input').addEventListener('change', handleUploadPhoto);
+}
+
+export { initUploadPhotoInput };
