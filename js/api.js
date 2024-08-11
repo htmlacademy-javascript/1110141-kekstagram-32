@@ -1,35 +1,40 @@
 const SERVER_URL = 'https://32.javascript.htmlacademy.pro/kekstagram';
-const ACTIONS = {
-  GET_PHOTOS_DATA: {
-    ROUTE: '/data',
-    METHOD: 'GET',
-  },
-  SEND_USER_DATA: {
-    ROUTE: '/',
-    METHOD: 'POST',
-  },
-};
 
 /**
- * Обращается к серверу по указанному действию
- * @param {string} action действие относительно сервера (GET_PHOTOS_DATA или SEND_USER_DATA)
- * @param {FormData} body - тело запроса в виде FormData
- * @returns {Promise} возвращает промис обращения к серверу
+ * Создает маршрут на основе действия и метода
+ * @param {string} action Название действия
+ * @param {string} method HTTP-метод запроса (GET или POST)
+ * @returns {string} Полный URL маршрута с указанным методом
  */
-function fetchToServer (action, body = null) {
-  return fetch(`${SERVER_URL}${ACTIONS[action].ROUTE}`, { method: ACTIONS[action].METHOD, body: body })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Проблема — ${response.status}, ${response.statusText}`);
-      }
-      return response.json();
-    })
-    .catch((error) => {
-      throw error;
-    });
+function getRoute(action, method) {
+  const routeMap = {
+    GetPhotosData: '/data',
+    SendUserData: '/',
+  };
+  return { url: `${SERVER_URL}${routeMap[action]}`, method };
 }
 
-const getData = () => fetchToServer('GET_PHOTOS_DATA');
-const sendData = (body) => fetchToServer('SEND_USER_DATA', body);
+/**
+ * Обращается к серверу по указанному действию и методу
+ * @param {string} action Действие относительно сервера
+ * @param {string} method HTTP-метод запроса (GET или POST)
+ * @param {FormData} [body] Тело запроса в виде FormData (только для POST)
+ * @returns {Promise<any>} Возвращает промис с ответом сервера или выбрасывает ошибку
+ */
+async function fetchToServer(action, method, body = null) {
+  const { url, method: requestMethod } = getRoute(action, method);
+  const response = await fetch(url, { method: requestMethod, body });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message}`);
+  }
+
+  return response.json();
+}
+
+// Примеры использования
+const getData = () => fetchToServer('GetPhotosData', 'GET');
+const sendData = (body) => fetchToServer('SendUserData', 'POST', body);
 
 export { getData, sendData };

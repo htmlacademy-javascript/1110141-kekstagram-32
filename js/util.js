@@ -63,7 +63,9 @@ function handleDocumentKeydown(event) {
   if (isEscapeKey(event)) {
     if (document.querySelector('.error')) {
       document.querySelector('.error').remove();
-    } else if (!document.querySelector('.img-upload__overlay').classList.contains('hidden') && (document.activeElement !== hashtagsInput || document.activeElement !== descriptionTextarea)) {
+    } else if(document.querySelector('.success')) {
+      document.querySelector('.success').remove();
+    } else if (!document.querySelector('.img-upload__overlay').classList.contains('hidden') && (document.activeElement !== hashtagsInput && document.activeElement !== descriptionTextarea)) {
       closeModal(document.querySelector('.img-upload__overlay'));
     }
 
@@ -82,4 +84,22 @@ function isEscapeKey(evt) {
   return evt.key === 'Escape';
 }
 
-export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, handleDocumentKeydown, closeModal};
+/**
+ * Инициализация слушателя поля загрузки изображений
+ */
+function initDocumentKeydown() {
+  document.addEventListener('keydown', (evt) => handleDocumentKeydown(evt));
+}
+
+/**
+ * Показывает ошибку о безуспешной попытке получить данные с сервера и удаляет эту ошибку из DOM через указанное время
+ * @param {Number} timeout Таймаут исчезновения ошибки, мс
+ */
+function showDataError(timeout) {
+  document.body.append(document.querySelector('#data-error').content.cloneNode(true));
+  setTimeout(() => {
+    document.querySelector('.data-error').remove();
+  }, timeout);
+}
+
+export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, initDocumentKeydown, closeModal, showDataError};
