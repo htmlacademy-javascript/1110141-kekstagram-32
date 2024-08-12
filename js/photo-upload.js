@@ -53,7 +53,6 @@ effectLevelSlider.noUiSlider.on('slide', () => {
 });
 
 // При клике по кнопкам фильтров уровень насыщенности сбрасывается до начального значения (100%): слайдер, фильтр изображения и значение поля обновляются, а если указан "Оригинал" — фильтр сбрасывается, а слайдер скрывается
-// TODO: Узнать, какое значение должно записываться в поле, если указан фильтр "Оригинал"
 uploadPhotoForm.querySelector('.effects__list').addEventListener('click', (event) => {
   const target = event.target;
   if (target.classList.contains('effects__radio')) {
