@@ -21,6 +21,7 @@ const FILE_TYPES = ['jpg', 'jpeg', 'png'];
 const uploadPhotoForm = document.querySelector('.img-upload__overlay');
 const uploadCancel = uploadPhotoForm.querySelector('#upload-cancel');
 const uploadImageForm = document.querySelector('.img-upload__form');
+const submitButton = document.querySelector('button#upload-submit');
 
 const smallerScaleButton = uploadImageForm.querySelector('.scale__control--smaller');
 const biggerScaleButton = uploadImageForm.querySelector('.scale__control--bigger');
@@ -108,6 +109,13 @@ function handleDownScale () {
 function closeAndCleanForm () {
   closeModal(uploadPhotoForm);
 
+  // Кнопка отправки снова активна
+  submitButton.removeAttribute('disabled');
+
+  // Чистим поле файла
+  document.querySelector('.img-upload__input').value = '';
+
+  // Возвращаем все поля и стили
   document.querySelector('.img-upload__preview img').style.transform = 'scale(1)';
   uploadPhotoForm.querySelector('.text__hashtags').value = '';
   uploadPhotoForm.querySelector('.text__description').value = '';
@@ -119,6 +127,8 @@ function closeAndCleanForm () {
 
   previewImage.style.filter = 'none';
   effectLevelContainer.style.display = 'none';
+
+  pristine.destroy();
 }
 
 biggerScaleButton.addEventListener('click', handleUpScale);
@@ -165,14 +175,13 @@ const pristine = new Pristine(uploadImageForm, {
  */
 function validateHashtags(value) {
   value = value.trim();
-
+  
   if (value === '') {
     return true;
   }
-
-  const hashtags = value.split(' ');
+  
+  const hashtags = value.split(' ').map(el => el.trim()).filter(el => el !== '');
   const RegExp = /^#[a-zа-яё0-9]{1,19}$/i;
-
   const allValid = hashtags.every((el) => RegExp.test(el));
 
   if (!allValid) {
@@ -192,8 +201,11 @@ pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), validate
 function checkHashtagsCount (value) {
   value = value.trim();
 
-  const hashtags = value.split(' ');
+  if (value === '') {
+    return true;
+  }
 
+  const hashtags = value.split('#').slice(1);
   return hashtags.length <= HASHTAGS_MAX_COUNT;
 }
 
@@ -206,8 +218,11 @@ pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), checkHas
  */
 function checkHashtagsUnique (value) {
   value = value.trim();
-  const hashtags = value.split(' ');
+
+  const hashtags = value.split(' ').map(el => el.trim()).filter(el => el !== '');  
   const uniqueHashtags = new Set(hashtags.map((tag) => tag.toLowerCase()));
+
+  console.log(hashtags, uniqueHashtags);
 
   return uniqueHashtags.size === hashtags.length;
 }
@@ -258,18 +273,22 @@ uploadImageForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
 
   if (pristine.validate()) {
-    // Если валидация прошла — отсылаем аякс запрос
+    submitButton.setAttribute('disabled', true);
+
+    // Если валидация прошла — отсылаем аякс запроc
     const formData = new FormData(evt.target);
+  
     sendData(formData)
       // Если успех — чистим и закрываем форму
       .then(() => {
+                
         closeAndCleanForm();
         const successBlock = showFetchMessage('success');
 
         // Обработчик клика по документу
         document.addEventListener('click', (event) => handleCloseMessageOnDocumentClick(event, successBlock, 'success'));
 
-        // Обработчик клика по кнопке закрытия
+        // Обработчик клика по кнопке закрытия успеха
         successBlock.querySelector('.success__button').addEventListener('click', () => {
           successBlock.remove(); // Удаляем блок успеха
         });
@@ -280,6 +299,9 @@ uploadImageForm.addEventListener('submit', (evt) => {
 
         // Обработчик клика по документу
         document.addEventListener('click', (event) => handleCloseMessageOnDocumentClick(event, errorBlock, 'error'));
+        
+        // Кнопка отправки снова активна
+        submitButton.removeAttribute('disabled');
 
         // Обработчик клика по кнопке закрытия ошибки
         errorBlock.querySelector('.error__button').addEventListener('click', () => {
@@ -288,7 +310,6 @@ uploadImageForm.addEventListener('submit', (evt) => {
       });
   }
 });
-
 
 /**
  * Инициализация слушателя поля загрузки изображений
