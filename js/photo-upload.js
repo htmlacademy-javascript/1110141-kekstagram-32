@@ -16,6 +16,8 @@ const Effects = {
   heat: { filter: 'brightness', min: 1, max: 3, step: 0.1, unit: '' },
 };
 
+const FILE_TYPES = ['jpg', 'jpeg', 'png'];
+
 const uploadPhotoForm = document.querySelector('.img-upload__overlay');
 const uploadCancel = uploadPhotoForm.querySelector('#upload-cancel');
 const uploadImageForm = document.querySelector('.img-upload__form');
@@ -124,11 +126,21 @@ smallerScaleButton.addEventListener('click', handleDownScale);
 
 uploadCancel.addEventListener('click', closeAndCleanForm);
 
-// Пока что временно экспортируем эту функцию, потом модуль будет экспортировать изображение для вставки в сетку (или нет 🤡)
+/**
+ * Фунция-слушатель для поля файла 
+ */
 function handleUploadPhoto() {
   uploadPhotoForm.classList.remove('hidden');
   effectLevelContainer.style.display = 'none';
   document.body.classList.add('modal-open');
+
+  const file = this.files[0];
+  const fileName = file.name.toLowerCase();
+  const matches = FILE_TYPES.some((el) => fileName.endsWith(el));
+
+  if (matches) {
+    previewImage.src = URL.createObjectURL(file);
+  }
 }
 
 const pristine = new Pristine(uploadImageForm, {
