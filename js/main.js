@@ -1,7 +1,7 @@
 import { getData } from './api.js';
 import { drawMiniatures } from './miniatures-draw.js';
 import { initUploadPhotoInput } from './photo-upload.js';
-import { initDocumentKeydown, showDataError, debounce, setActiveFilterButton, getFilteredPhotos, handleImageFiltersClick } from './util.js';
+import { initDocumentKeydown, showDataError, debounce, getFilteredPhotos, handleImageFiltersClick } from './util.js';
 
 const TIMEOUT = 5000;
 const imgFilters = document.querySelector('.img-filters');
@@ -20,7 +20,6 @@ getData()
     const debouncedGetFilteredPhotos = debounce((filterType) => {
       const filteredPhotos = getFilteredPhotos(userPhotos, filterType);
       drawMiniatures(filteredPhotos);
-      setActiveFilterButton(filterType);
     });
 
     imgFilters.addEventListener('click', (event) => handleImageFiltersClick(event, debouncedGetFilteredPhotos));

@@ -21,6 +21,7 @@ const FILE_TYPES = ['jpg', 'jpeg', 'png'];
 const uploadPhotoForm = document.querySelector('.img-upload__overlay');
 const uploadCancel = uploadPhotoForm.querySelector('#upload-cancel');
 const uploadImageForm = document.querySelector('.img-upload__form');
+const submitButton = document.querySelector('button#upload-submit');
 
 const smallerScaleButton = uploadImageForm.querySelector('.scale__control--smaller');
 const biggerScaleButton = uploadImageForm.querySelector('.scale__control--bigger');
@@ -43,6 +44,16 @@ noUiSlider.create(effectLevelSlider, {
   connect: 'lower',
 });
 
+// Инициализация валидатора Pristine
+const pristine = new Pristine(uploadImageForm, {
+  classTo: 'img-upload__field-wrapper',
+  errorClass: 'img-upload__field-wrapper--invalid',
+  successClass: 'img-upload__field-wrapper--valid',
+  errorTextParent: 'img-upload__field-wrapper',
+  errorTextTag: 'div',
+  errorTextClass: 'img-upload__field-wrapper--error',
+});
+
 // При изменении слайдера изменяем насыщенность фильтров
 effectLevelSlider.noUiSlider.on('slide', () => {
   const currentEffect = Effects[uploadImageForm.querySelector('.effects__radio:checked').value];
@@ -52,7 +63,6 @@ effectLevelSlider.noUiSlider.on('slide', () => {
 });
 
 // При клике по кнопкам фильтров уровень насыщенности сбрасывается до начального значения (100%): слайдер, фильтр изображения и значение поля обновляются, а если указан "Оригинал" — фильтр сбрасывается, а слайдер скрывается
-// TODO: Узнать, какое значение должно записываться в поле, если указан фильтр "Оригинал"
 uploadPhotoForm.querySelector('.effects__list').addEventListener('click', (event) => {
   const target = event.target;
   if (target.classList.contains('effects__radio')) {
@@ -108,6 +118,13 @@ function handleDownScale () {
 function closeAndCleanForm () {
   closeModal(uploadPhotoForm);
 
+  // Кнопка отправки снова активна
+  submitButton.removeAttribute('disabled');
+
+  // Чистим поле файла
+  document.querySelector('.img-upload__input').value = '';
+
+  // Возвращаем все поля и стили
   document.querySelector('.img-upload__preview img').style.transform = 'scale(1)';
   uploadPhotoForm.querySelector('.text__hashtags').value = '';
   uploadPhotoForm.querySelector('.text__description').value = '';
@@ -117,8 +134,12 @@ function closeAndCleanForm () {
     input.checked = input.id === 'effect-none';
   });
 
+  scaleValueElement.value = '100%';
+
   previewImage.style.filter = 'none';
   effectLevelContainer.style.display = 'none';
+
+  pristine.destroy();
 }
 
 biggerScaleButton.addEventListener('click', handleUpScale);
@@ -127,7 +148,7 @@ smallerScaleButton.addEventListener('click', handleDownScale);
 uploadCancel.addEventListener('click', closeAndCleanForm);
 
 /**
- * Фунция-слушатель для поля файла 
+ * Фунция-слушатель для поля файла
  */
 function handleUploadPhoto() {
   uploadPhotoForm.classList.remove('hidden');
@@ -140,17 +161,13 @@ function handleUploadPhoto() {
 
   if (matches) {
     previewImage.src = URL.createObjectURL(file);
+
+    document.querySelectorAll('.effects__preview').forEach((el) => {
+      el.style.backgroundImage = `url(${URL.createObjectURL(file)}`;
+    });
+
   }
 }
-
-const pristine = new Pristine(uploadImageForm, {
-  classTo: 'img-upload__field-wrapper',
-  errorClass: 'img-upload__field-wrapper--invalid',
-  successClass: 'img-upload__field-wrapper--valid',
-  errorTextParent: 'img-upload__field-wrapper',
-  errorTextTag: 'div',
-  errorTextClass: 'img-upload__field-wrapper--error',
-});
 
 /**
  * Проверяет хештеги в input.text__hashtags на соответствие критериям:
@@ -170,9 +187,8 @@ function validateHashtags(value) {
     return true;
   }
 
-  const hashtags = value.split(' ');
+  const hashtags = value.split(' ').map((el) => el.trim()).filter((elem) => elem !== '');
   const RegExp = /^#[a-zа-яё0-9]{1,19}$/i;
-
   const allValid = hashtags.every((el) => RegExp.test(el));
 
   if (!allValid) {
@@ -192,8 +208,11 @@ pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), validate
 function checkHashtagsCount (value) {
   value = value.trim();
 
-  const hashtags = value.split(' ');
+  if (value === '') {
+    return true;
+  }
 
+  const hashtags = value.split('#').slice(1);
   return hashtags.length <= HASHTAGS_MAX_COUNT;
 }
 
@@ -206,9 +225,9 @@ pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), checkHas
  */
 function checkHashtagsUnique (value) {
   value = value.trim();
-  const hashtags = value.split(' ');
-  const uniqueHashtags = new Set(hashtags.map((tag) => tag.toLowerCase()));
 
+  const hashtags = value.split(' ').map((el) => el.trim()).filter((elem) => elem !== '');
+  const uniqueHashtags = new Set(hashtags.map((tag) => tag.toLowerCase()));
   return uniqueHashtags.size === hashtags.length;
 }
 
@@ -258,18 +277,22 @@ uploadImageForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
 
   if (pristine.validate()) {
-    // Если валидация прошла — отсылаем аякс запрос
+    submitButton.setAttribute('disabled', true);
+
+    // Если валидация прошла — отсылаем аякс запроc
     const formData = new FormData(evt.target);
+
     sendData(formData)
       // Если успех — чистим и закрываем форму
       .then(() => {
+
         closeAndCleanForm();
         const successBlock = showFetchMessage('success');
 
         // Обработчик клика по документу
         document.addEventListener('click', (event) => handleCloseMessageOnDocumentClick(event, successBlock, 'success'));
 
-        // Обработчик клика по кнопке закрытия
+        // Обработчик клика по кнопке закрытия успеха
         successBlock.querySelector('.success__button').addEventListener('click', () => {
           successBlock.remove(); // Удаляем блок успеха
         });
@@ -281,6 +304,9 @@ uploadImageForm.addEventListener('submit', (evt) => {
         // Обработчик клика по документу
         document.addEventListener('click', (event) => handleCloseMessageOnDocumentClick(event, errorBlock, 'error'));
 
+        // Кнопка отправки снова активна
+        submitButton.removeAttribute('disabled');
+
         // Обработчик клика по кнопке закрытия ошибки
         errorBlock.querySelector('.error__button').addEventListener('click', () => {
           errorBlock.remove(); // Удаляем блок ошибки
@@ -289,7 +315,6 @@ uploadImageForm.addEventListener('submit', (evt) => {
   }
 });
 
-
 /**
  * Инициализация слушателя поля загрузки изображений
  */
@@ -297,4 +322,4 @@ function initUploadPhotoInput () {
   document.querySelector('.img-upload__input').addEventListener('change', handleUploadPhoto);
 }
 
-export { initUploadPhotoInput };
+export { initUploadPhotoInput, closeAndCleanForm };

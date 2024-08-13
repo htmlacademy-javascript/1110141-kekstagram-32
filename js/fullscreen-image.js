@@ -15,15 +15,22 @@ const commentTemplateElement = document.querySelector('.social__comment');
 
 cancelPictureButton.addEventListener('click', () => closeModal(bigPictureElement));
 
+let currentCommentsFragmentFunction = null;
+
 /**
  * Открывает окно с большой фотографией.
- * @param {Function} commentsFragmentFunction - Функция для рендеринга фрагмента комментариев.
+ * @param {Function} newCommentsFragmentFunction - Функция для рендеринга фрагмента комментариев.
  */
-function openBigPicture(commentsFragmentFunction) {
+function openBigPicture(newCommentsFragmentFunction) {
+  if (currentCommentsFragmentFunction) {
+    commentsLoaderButton.removeEventListener('click', currentCommentsFragmentFunction);
+  }
+
+  currentCommentsFragmentFunction = newCommentsFragmentFunction;
+  commentsLoaderButton.addEventListener('click', currentCommentsFragmentFunction);
+
   bigPictureElement.classList.remove('hidden');
   document.body.classList.add('modal-open');
-
-  commentsLoaderButton.addEventListener('click', commentsFragmentFunction);
 }
 
 /**
@@ -84,7 +91,6 @@ function handleOpenFullscreenImage(event, photoData) {
   commentsFragmentFunction();
 
   descriptionElement.textContent = photoData.description;
-
   openBigPicture(commentsFragmentFunction);
 }
 
