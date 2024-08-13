@@ -174,4 +174,4 @@ function handleImageFiltersClick (event, debouncedGetFilteredPhotos) {
   setActiveFilterButton(id);
 }
 
-export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, initDocumentKeydown, closeModal, showDataError, debounce, setActiveFilterButton, getFilteredPhotos, handleImageFiltersClick};
+export { getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, initDocumentKeydown, closeModal, showDataError, debounce, setActiveFilterButton, getFilteredPhotos, handleImageFiltersClick };
