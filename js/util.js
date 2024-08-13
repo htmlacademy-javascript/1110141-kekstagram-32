@@ -102,4 +102,73 @@ function showDataError(timeout) {
   }, timeout);
 }
 
-export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, initDocumentKeydown, closeModal, showDataError};
+function debounce (callback, timeoutDelay = 500) {
+  // Используем замыкания, чтобы id таймаута у нас навсегда приклеился
+  // к возвращаемой функции с setTimeout, тогда мы его сможем перезаписывать
+  let timeoutId;
+
+  return (...rest) => {
+    // Перед каждым новым вызовом удаляем предыдущий таймаут,
+    // чтобы они не накапливались
+    clearTimeout(timeoutId);
+
+    // Затем устанавливаем новый таймаут с вызовом колбэка на ту же задержку
+    timeoutId = setTimeout(() => callback.apply(this, rest), timeoutDelay);
+
+    // Таким образом цикл «поставить таймаут - удалить таймаут» будет выполняться,
+    // пока действие совершается чаще, чем переданная задержка timeoutDelay
+  };
+}
+
+/**
+ * Убирает "активный" класс с текущей кнопки и присваивает новой кнопке
+ * @param {String} id ID кликнутной кнопки 
+ */
+function setActiveFilterButton (id) {
+  document.querySelector('.img-filters__button--active').classList.remove('img-filters__button--active');
+  document.querySelector(`#${id}`).classList.add('img-filters__button--active');
+}
+
+/**
+ * Перемешивает элементы переданного массива случайным образом
+ * @param {Array} array Массив для перемешивания 
+ * @returns {Array} Перемешанный случайным образом массив
+ */
+function shuffleArray(array) {
+  return array.slice().sort(() => Math.random() - 0.5);
+}
+
+/**
+ * Перерисовывает пользовательские фотографии на основании полученых массива фотографий и ID кликнутой кнопки 
+ * @param {Array} userPhotos Массив объектов пользовательских изображений
+ * @param {String} filterType ID кликнутой кнопки относительно которого будет производиться отрисовка фотографий
+ */
+function getFilteredPhotos(userPhotos, filterType) {
+  let sortedPhotos;
+  switch (filterType) {
+    case 'filter-default':
+      // Фотографии в изначальном порядке
+      sortedPhotos = userPhotos;
+      break;
+    case 'filter-random':
+      // 10 случайных, не повторяющихся фотографий
+      sortedPhotos = shuffleArray(userPhotos).slice(0, 10);
+      break;
+    case 'filter-discussed':
+      // Фотографии, отсортированные в порядке убывания количества комментариев
+      sortedPhotos = userPhotos.slice().sort((a, b) => b.comments.length - a.comments.length);
+      break;
+    default:
+      sortedPhotos = userPhotos;
+  }
+  return sortedPhotos;
+}
+
+function handleImageFiltersClick (event, debouncedGetFilteredPhotos) {
+  const id = event.target.id;
+  if (id === 'filter-default' || id === 'filter-random' || id === 'filter-discussed') {
+    debouncedGetFilteredPhotos(id);
+  }
+}
+
+export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, initDocumentKeydown, closeModal, showDataError, debounce, setActiveFilterButton, getFilteredPhotos, handleImageFiltersClick};

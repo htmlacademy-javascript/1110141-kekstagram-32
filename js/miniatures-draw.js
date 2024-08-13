@@ -6,12 +6,21 @@ const pictureElement = templateContent.querySelector('.picture');
 const fragment = document.createDocumentFragment(); // Фрагмент для записи миниатюр
 const picturesList = document.querySelector('.pictures');
 
+/**
+ * Удаляет все изображения для последующей перерисовки
+ */
+function deleteAllPictures() {
+  picturesList.querySelectorAll('.picture').forEach((el) => {
+    el.remove();
+  });
+}
 
 /**
  * Создаёт миниатюры из аргумента фотографий
  * @param {array} photos - массив объектов фотографий
  */
 function drawMiniatures (photos) {
+  deleteAllPictures();
   photos.forEach((photoObject) => {
     const newPictureElement = pictureElement.cloneNode(true);
     const pictureImg = newPictureElement.querySelector('.picture__img');
