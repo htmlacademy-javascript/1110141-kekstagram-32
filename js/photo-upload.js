@@ -44,6 +44,16 @@ noUiSlider.create(effectLevelSlider, {
   connect: 'lower',
 });
 
+// Инициализация валидатора Pristine
+const pristine = new Pristine(uploadImageForm, {
+  classTo: 'img-upload__field-wrapper',
+  errorClass: 'img-upload__field-wrapper--invalid',
+  successClass: 'img-upload__field-wrapper--valid',
+  errorTextParent: 'img-upload__field-wrapper',
+  errorTextTag: 'div',
+  errorTextClass: 'img-upload__field-wrapper--error',
+});
+
 // При изменении слайдера изменяем насыщенность фильтров
 effectLevelSlider.noUiSlider.on('slide', () => {
   const currentEffect = Effects[uploadImageForm.querySelector('.effects__radio:checked').value];
@@ -124,6 +134,8 @@ function closeAndCleanForm () {
     input.checked = input.id === 'effect-none';
   });
 
+  scaleValueElement.value = '100%';
+
   previewImage.style.filter = 'none';
   effectLevelContainer.style.display = 'none';
 
@@ -136,7 +148,7 @@ smallerScaleButton.addEventListener('click', handleDownScale);
 uploadCancel.addEventListener('click', closeAndCleanForm);
 
 /**
- * Фунция-слушатель для поля файла 
+ * Фунция-слушатель для поля файла
  */
 function handleUploadPhoto() {
   uploadPhotoForm.classList.remove('hidden');
@@ -149,17 +161,13 @@ function handleUploadPhoto() {
 
   if (matches) {
     previewImage.src = URL.createObjectURL(file);
+
+    document.querySelectorAll('.effects__preview').forEach((el) => {
+      el.style.backgroundImage = `url(${URL.createObjectURL(file)}`;
+    });
+
   }
 }
-
-const pristine = new Pristine(uploadImageForm, {
-  classTo: 'img-upload__field-wrapper',
-  errorClass: 'img-upload__field-wrapper--invalid',
-  successClass: 'img-upload__field-wrapper--valid',
-  errorTextParent: 'img-upload__field-wrapper',
-  errorTextTag: 'div',
-  errorTextClass: 'img-upload__field-wrapper--error',
-});
 
 /**
  * Проверяет хештеги в input.text__hashtags на соответствие критериям:
@@ -174,12 +182,12 @@ const pristine = new Pristine(uploadImageForm, {
  */
 function validateHashtags(value) {
   value = value.trim();
-  
+
   if (value === '') {
     return true;
   }
-  
-  const hashtags = value.split(' ').map(el => el.trim()).filter(el => el !== '');
+
+  const hashtags = value.split(' ').map((el) => el.trim()).filter((elem) => elem !== '');
   const RegExp = /^#[a-zа-яё0-9]{1,19}$/i;
   const allValid = hashtags.every((el) => RegExp.test(el));
 
@@ -218,11 +226,8 @@ pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), checkHas
 function checkHashtagsUnique (value) {
   value = value.trim();
 
-  const hashtags = value.split(' ').map(el => el.trim()).filter(el => el !== '');  
+  const hashtags = value.split(' ').map((el) => el.trim()).filter((elem) => elem !== '');
   const uniqueHashtags = new Set(hashtags.map((tag) => tag.toLowerCase()));
-
-  console.log(hashtags, uniqueHashtags);
-
   return uniqueHashtags.size === hashtags.length;
 }
 
@@ -276,11 +281,11 @@ uploadImageForm.addEventListener('submit', (evt) => {
 
     // Если валидация прошла — отсылаем аякс запроc
     const formData = new FormData(evt.target);
-  
+
     sendData(formData)
       // Если успех — чистим и закрываем форму
       .then(() => {
-                
+
         closeAndCleanForm();
         const successBlock = showFetchMessage('success');
 
@@ -298,7 +303,7 @@ uploadImageForm.addEventListener('submit', (evt) => {
 
         // Обработчик клика по документу
         document.addEventListener('click', (event) => handleCloseMessageOnDocumentClick(event, errorBlock, 'error'));
-        
+
         // Кнопка отправки снова активна
         submitButton.removeAttribute('disabled');
 
@@ -317,4 +322,4 @@ function initUploadPhotoInput () {
   document.querySelector('.img-upload__input').addEventListener('change', handleUploadPhoto);
 }
 
-export { initUploadPhotoInput };
+export { initUploadPhotoInput, closeAndCleanForm };

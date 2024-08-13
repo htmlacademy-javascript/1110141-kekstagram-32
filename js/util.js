@@ -1,3 +1,5 @@
+import { closeAndCleanForm } from './photo-upload.js';
+
 /**
  * Получает случайное число из диапазона
  * @param {number} a - Минимальное значение диапазона случайных чисел
@@ -66,7 +68,7 @@ function handleDocumentKeydown(event) {
     } else if(document.querySelector('.success')) {
       document.querySelector('.success').remove();
     } else if (!document.querySelector('.img-upload__overlay').classList.contains('hidden') && (document.activeElement !== hashtagsInput && document.activeElement !== descriptionTextarea)) {
-      closeModal(document.querySelector('.img-upload__overlay'));
+      closeAndCleanForm();
     }
 
     if (!document.querySelector('.big-picture').classList.contains('hidden')) {
@@ -104,7 +106,7 @@ function showDataError(timeout) {
 
 /**
  * Убирает "активный" класс с текущей кнопки и присваивает новой кнопке
- * @param {String} id ID кликнутной кнопки 
+ * @param {String} id ID кликнутной кнопки
  */
 function setActiveFilterButton (id) {
   document.querySelector('.img-filters__button--active').classList.remove('img-filters__button--active');
@@ -113,7 +115,7 @@ function setActiveFilterButton (id) {
 
 /**
  * Перемешивает элементы переданного массива случайным образом
- * @param {Array} array Массив для перемешивания 
+ * @param {Array} array Массив для перемешивания
  * @returns {Array} Перемешанный случайным образом массив
  */
 function shuffleArray(array) {
@@ -121,7 +123,7 @@ function shuffleArray(array) {
 }
 
 /**
- * Перерисовывает пользовательские фотографии на основании полученых массива фотографий и ID кликнутой кнопки 
+ * Перерисовывает пользовательские фотографии на основании полученых массива фотографий и ID кликнутой кнопки
  * @param {Array} userPhotos Массив объектов пользовательских изображений
  * @param {String} filterType ID кликнутой кнопки относительно которого будет производиться отрисовка фотографий
  */
@@ -169,6 +171,7 @@ function handleImageFiltersClick (event, debouncedGetFilteredPhotos) {
   if (id === 'filter-default' || id === 'filter-random' || id === 'filter-discussed') {
     debouncedGetFilteredPhotos(id);
   }
+  setActiveFilterButton(id);
 }
 
 export {getRandomInteger, getRandomUniqueNumberFromRange, getRandomElementFromArray, initDocumentKeydown, closeModal, showDataError, debounce, setActiveFilterButton, getFilteredPhotos, handleImageFiltersClick};
