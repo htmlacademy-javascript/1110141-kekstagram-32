@@ -30,19 +30,27 @@ const PHOTO_DESCRIPTIONS = [
   'Листья шепчут о приходе осени.',
 ];
 
+const MAX_COMMENT_ID = 1000;
+const MAX_COMMENT_COUNT = 25;
+
+const MAX_AVATAR_NUMBER = 6;
+
+const MIN_LIKES_COUNT = 15;
+const MAX_LIKES_COUNT = 200;
+
 /**
  * Генерирует случайное количество комментариев
  * @returns {Function} - замыкание создания списка комментариев
  */
-function generateComments () {
+const generateComments = () => {
 
-  const commentCount = getRandomInteger(1, 25); // Генерируем случайное количество комментариев
-  const commentsList = Array(); // Массив-список комментариев
+  const commentCount = getRandomInteger(1, MAX_COMMENT_COUNT); // Генерируем случайное количество комментариев
+  const comments = Array(); // Массив-список комментариев
 
   for (let i = 0; i <= commentCount; i++) {
-    const commentID = getRandomUniqueNumberFromRange(1, 1000);
+    const commentID = getRandomUniqueNumberFromRange(1, MAX_COMMENT_ID);
 
-    const randomAvatarNumber = getRandomInteger(1, 6);
+    const randomAvatarNumber = getRandomInteger(1, MAX_AVATAR_NUMBER);
 
     const comment = {
       id: commentID, // Любое число, не должны повторяться
@@ -51,29 +59,27 @@ function generateComments () {
       name: getRandomElementFromArray(NAMES), // Должны быть случайными. Набор имён для комментаторов составьте сами
     };
 
-    commentsList.push(comment);
+    comments.push(comment);
   }
 
-  return commentsList;
-}
+  return comments;
+};
 
 const photoID = getRandomUniqueNumberFromRange();
 const imageNameNumber = getRandomUniqueNumberFromRange();
 
-function getGeneratedPhoto () {
+const getGeneratedPhoto = () => {
   const description = getRandomElementFromArray(PHOTO_DESCRIPTIONS);
   const comments = generateComments();
   return {
     id:   photoID(), // От 1 до 25, не должны повторяться
     url: `photos/${imageNameNumber()}.jpg`, // Адрес картинки вида photos/{{i}}.jpg, где {{i}} — это число от 1 до 25. Адреса картинок не должны повторяться.
     description: description, // Любая строка
-    likes: getRandomInteger(15, 200), // Случайное число от 15 до 200
+    likes: getRandomInteger(MIN_LIKES_COUNT, MAX_LIKES_COUNT), // Случайное число от 15 до 200
     comments: comments,
   };
-}
+};
 
-function generatePhotos (length) {
-  return Array.from({length: length}, getGeneratedPhoto);
-}
+const generatePhotos = (length) => Array.from({length: length}, getGeneratedPhoto);
 
 export {generatePhotos};

@@ -17,6 +17,7 @@ const Effects = {
 };
 
 const FILE_TYPES = ['jpg', 'jpeg', 'png'];
+const REGEXP = /^#[a-zа-яё0-9]{1,19}$/i;
 
 const uploadPhotoForm = document.querySelector('.img-upload__overlay');
 const uploadCancel = uploadPhotoForm.querySelector('#upload-cancel');
@@ -91,31 +92,31 @@ uploadPhotoForm.querySelector('.effects__list').addEventListener('click', (event
 /**
  * Увеличивает скейл изображения-превью
  */
-function handleUpScale () {
+const onBiggerScaleButtonClick = () => {
   const scaleValue = parseInt(scaleValueElement.value, 10);
   if (scaleValue < SCALE_MAX_VALUE) {
     const newScaleValue = scaleValue + SCALE_STEP;
     scaleValueElement.value = `${newScaleValue}%`;
     previewImage.style.transform = `scale(${newScaleValue / 100})`;
   }
-}
+};
 
 /**
  * Уменьшает скейл изображения-превью
  */
-function handleDownScale () {
+const onSmallerScaleButtonClick = () => {
   const scaleValue = parseInt(scaleValueElement.value, 10);
   if (scaleValue > SCALE_MIN_VALUE) {
     const newScaleValue = scaleValue - SCALE_STEP;
     scaleValueElement.value = `${newScaleValue}%`;
     previewImage.style.transform = `scale(${newScaleValue / 100})`;
   }
-}
+};
 
 /**
  * Закрываем и чистим (приводим в стандартное значение) форму
  */
-function closeAndCleanForm () {
+const onCancelClick = () => {
   closeModal(uploadPhotoForm);
 
   // Кнопка отправки снова активна
@@ -140,34 +141,34 @@ function closeAndCleanForm () {
   effectLevelContainer.style.display = 'none';
 
   pristine.destroy();
-}
+};
 
-biggerScaleButton.addEventListener('click', handleUpScale);
-smallerScaleButton.addEventListener('click', handleDownScale);
+biggerScaleButton.addEventListener('click', onBiggerScaleButtonClick);
+smallerScaleButton.addEventListener('click', onSmallerScaleButtonClick);
 
-uploadCancel.addEventListener('click', closeAndCleanForm);
+uploadCancel.addEventListener('click', onCancelClick);
 
 /**
  * Фунция-слушатель для поля файла
  */
-function handleUploadPhoto() {
+const onUploadInputChange = (event) => {
   uploadPhotoForm.classList.remove('hidden');
   effectLevelContainer.style.display = 'none';
   document.body.classList.add('modal-open');
 
-  const file = this.files[0];
+  const file = event.target.files[0];
   const fileName = file.name.toLowerCase();
-  const matches = FILE_TYPES.some((el) => fileName.endsWith(el));
+  const matches = FILE_TYPES.some((fileTipe) => fileName.endsWith(fileTipe));
 
   if (matches) {
     previewImage.src = URL.createObjectURL(file);
 
-    document.querySelectorAll('.effects__preview').forEach((el) => {
-      el.style.backgroundImage = `url(${URL.createObjectURL(file)}`;
+    document.querySelectorAll('.effects__preview').forEach((effectPreview) => {
+      effectPreview.style.backgroundImage = `url(${URL.createObjectURL(file)}`;
     });
 
   }
-}
+};
 
 /**
  * Проверяет хештеги в input.text__hashtags на соответствие критериям:
@@ -180,23 +181,22 @@ function handleUploadPhoto() {
  * @param {*} value - Значение проверяемого input
  * @returns {boolean} - true, если число хештегов равно или менее HASHTAGS_MAX_COUNT
  */
-function validateHashtags(value) {
+const validateHashtags = (value) => {
   value = value.trim();
 
   if (value === '') {
     return true;
   }
 
-  const hashtags = value.split(' ').map((el) => el.trim()).filter((elem) => elem !== '');
-  const RegExp = /^#[a-zа-яё0-9]{1,19}$/i;
-  const allValid = hashtags.every((el) => RegExp.test(el));
+  const hashtags = value.split(' ').map((hashtagMapElement) => hashtagMapElement.trim()).filter((hashtagFilterElement) => hashtagFilterElement !== '');
+  const allValid = hashtags.every((hashtag) => REGEXP.test(hashtag));
 
   if (!allValid) {
     return false;
   }
 
   return true;
-}
+};
 
 pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), validateHashtags, 'Введён невалидный хэштег', 1);
 
@@ -205,7 +205,7 @@ pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), validate
  * @param {string} value - Значение проверяемого input
  * @returns {boolean} - true, если число хештегов равно или менее HASHTAGS_MAX_COUNT
  */
-function checkHashtagsCount (value) {
+const checkHashtagsCount = (value) => {
   value = value.trim();
 
   if (value === '') {
@@ -214,7 +214,7 @@ function checkHashtagsCount (value) {
 
   const hashtags = value.split('#').slice(1);
   return hashtags.length <= HASHTAGS_MAX_COUNT;
-}
+};
 
 pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), checkHashtagsCount, 'Превышено количество хэштегов', 2);
 
@@ -223,13 +223,13 @@ pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), checkHas
  * @param {string} value - Значение проверяемого input
  * @returns {boolean} - true, если все хештеги уникальны
  */
-function checkHashtagsUnique (value) {
+const checkHashtagsUnique = (value) => {
   value = value.trim();
 
-  const hashtags = value.split(' ').map((el) => el.trim()).filter((elem) => elem !== '');
+  const hashtags = value.split(' ').map((hashtagMapElement) => hashtagMapElement.trim()).filter((hashtagFilterElement) => hashtagFilterElement !== '');
   const uniqueHashtags = new Set(hashtags.map((tag) => tag.toLowerCase()));
   return uniqueHashtags.size === hashtags.length;
-}
+};
 
 pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), checkHashtagsUnique, 'Хэштеги повторяются', 3);
 
@@ -238,10 +238,10 @@ pristine.addValidator(uploadImageForm.querySelector('.text__hashtags'), checkHas
  * @param {string} value — Значение проверяемого textarea
  * @returns {boolean} - true, если длина значения меньше или равна DESCRIPTION_MAX_LENGTH
  */
-function checkDescriptionLength (value) {
+const checkDescriptionLength = (value) => {
   value = value.trim();
   return value.length <= DESCRIPTION_MAX_LENGTH;
-}
+};
 
 pristine.addValidator(uploadImageForm.querySelector('.text__description'), checkDescriptionLength, 'Длина комментария больше 140 символов');
 
@@ -250,10 +250,10 @@ pristine.addValidator(uploadImageForm.querySelector('.text__description'), check
  * @param {string} type Тип элемента ('error' или 'success')
  * @returns {Element} Созданный элемент
  */
-function showFetchMessage(type) {
+const showFetchMessage = (type) => {
   document.body.append(document.querySelector(`#${type}`).content.cloneNode(true));
   return document.querySelector(`.${type}`);
-}
+};
 
 /**
  * Слушатель проверяет все клики по документу. Если клик НЕ по внутреннему блоку или его дочерним элементам — удаляет блок, а затем и сам слушатель
@@ -261,36 +261,36 @@ function showFetchMessage(type) {
  * @param {Element} messageBlock Элемент, который нужно закрыть (ошибка или успех)
  * @param {string} type Тип блока ('error' или 'success')
  */
-function handleCloseMessageOnDocumentClick(event, messageBlock, type) {
+const onDocumentClick = (event, messageBlock, type) => {
   const innerBlockClass = `.${type}__inner`;
   const buttonClass = `.${type}__button`;
 
   // Проверяем, был ли клик вне внутреннего блока
   if (!messageBlock.querySelector(innerBlockClass).contains(event.target) && event.target !== messageBlock.querySelector(buttonClass)) {
     messageBlock.remove(); // Удаляем блок
-    document.removeEventListener('click', (e) => handleCloseMessageOnDocumentClick(e, messageBlock, type));
+    document.removeEventListener('click', (e) => onDocumentClick(e, messageBlock, type));
   }
-}
+};
 
 // Обработка submit-а формы
-uploadImageForm.addEventListener('submit', (evt) => {
-  evt.preventDefault();
+uploadImageForm.addEventListener('submit', (event) => {
+  event.preventDefault();
 
   if (pristine.validate()) {
     submitButton.setAttribute('disabled', true);
 
     // Если валидация прошла — отсылаем аякс запроc
-    const formData = new FormData(evt.target);
+    const formData = new FormData(event.target);
 
     sendData(formData)
       // Если успех — чистим и закрываем форму
       .then(() => {
 
-        closeAndCleanForm();
+        onCancelClick();
         const successBlock = showFetchMessage('success');
 
         // Обработчик клика по документу
-        document.addEventListener('click', (event) => handleCloseMessageOnDocumentClick(event, successBlock, 'success'));
+        document.addEventListener('click', (evt) => onDocumentClick(evt, successBlock, 'success'));
 
         // Обработчик клика по кнопке закрытия успеха
         successBlock.querySelector('.success__button').addEventListener('click', () => {
@@ -302,7 +302,7 @@ uploadImageForm.addEventListener('submit', (evt) => {
         const errorBlock = showFetchMessage('error');
 
         // Обработчик клика по документу
-        document.addEventListener('click', (event) => handleCloseMessageOnDocumentClick(event, errorBlock, 'error'));
+        document.addEventListener('click', (evt) => onDocumentClick(evt, errorBlock, 'error'));
 
         // Кнопка отправки снова активна
         submitButton.removeAttribute('disabled');
@@ -318,8 +318,8 @@ uploadImageForm.addEventListener('submit', (evt) => {
 /**
  * Инициализация слушателя поля загрузки изображений
  */
-function initUploadPhotoInput () {
-  document.querySelector('.img-upload__input').addEventListener('change', handleUploadPhoto);
-}
+const initUploadPhotoInput = () => {
+  document.querySelector('.img-upload__input').addEventListener('change', (event) => onUploadInputChange(event));
+};
 
-export { initUploadPhotoInput, closeAndCleanForm };
+export { initUploadPhotoInput, onCancelClick };
