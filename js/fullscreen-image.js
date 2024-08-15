@@ -21,7 +21,7 @@ let currentCommentsFragmentFunction = null;
  * Открывает окно с большой фотографией.
  * @param {Function} newCommentsFragmentFunction - Функция для рендеринга фрагмента комментариев.
  */
-function openBigPicture(newCommentsFragmentFunction) {
+const openBigPicture = (newCommentsFragmentFunction) => {
   if (currentCommentsFragmentFunction) {
     commentsLoaderButton.removeEventListener('click', currentCommentsFragmentFunction);
   }
@@ -31,25 +31,25 @@ function openBigPicture(newCommentsFragmentFunction) {
 
   bigPictureElement.classList.remove('hidden');
   document.body.classList.add('modal-open');
-}
+};
 
 /**
  * Рендерит комментарии по шагам.
- * @param {Array} commentsArray - Массив комментариев.
+ * @param {Array} comments - Массив комментариев.
  * @param {number} [step=COMMENTS_RENDER_NUMBER] - Количество комментариев для рендеринга за шаг.
  * @returns {Function} - Функция, которая рендерит следующую порцию комментариев.
  */
-function renderComments(commentsArray, step = COMMENTS_RENDER_NUMBER) {
+const renderComments = (comments, step = COMMENTS_RENDER_NUMBER) => {
   let renderedCommentsCount = 0;
 
-  return function () {
+  return () => {
     const fragment = document.createDocumentFragment();
 
-    const remainingCommentsCount = commentsArray.length - renderedCommentsCount;
+    const remainingCommentsCount = comments.length - renderedCommentsCount;
     const commentsToShowCount = Math.min(step, remainingCommentsCount);
 
     for (let i = 0; i < commentsToShowCount; i++) {
-      const comment = commentsArray[renderedCommentsCount++];
+      const comment = comments[renderedCommentsCount++];
       const newComment = commentTemplateElement.cloneNode(true);
       const socialPictureElement = newComment.querySelector('.social__picture');
       newComment.querySelector('.social__text').textContent = comment.message;
@@ -63,20 +63,20 @@ function renderComments(commentsArray, step = COMMENTS_RENDER_NUMBER) {
     commentsListElement.appendChild(fragment);
     shownCommentsCountElement.textContent = renderedCommentsCount;
 
-    if (renderedCommentsCount >= commentsArray.length) {
+    if (renderedCommentsCount >= comments.length) {
       commentsLoaderButton.classList.add('hidden');
     } else {
       commentsLoaderButton.classList.remove('hidden');
     }
   };
-}
+};
 
 /**
  * Привязывает функциональность полноэкранного изображения.
  * @param {Event} event - Объект события.
  * @param {Object} photoData - Данные фотографии.
  */
-function handleOpenFullscreenImage(event, photoData) {
+const onPictureClick = (event, photoData) => {
   event.preventDefault();
 
   const commentsFragmentFunction = renderComments(photoData.comments, COMMENTS_RENDER_NUMBER);
@@ -92,6 +92,6 @@ function handleOpenFullscreenImage(event, photoData) {
 
   descriptionElement.textContent = photoData.description;
   openBigPicture(commentsFragmentFunction);
-}
+};
 
-export { handleOpenFullscreenImage };
+export { onPictureClick };

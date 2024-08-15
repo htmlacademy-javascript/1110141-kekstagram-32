@@ -1,4 +1,4 @@
-import { handleOpenFullscreenImage } from './fullscreen-image.js';
+import { onPictureClick } from './fullscreen-image.js';
 
 const pictureTemplate = document.querySelector('#picture'); // Шаблон миниатюры
 const templateContent = pictureTemplate.content;
@@ -9,17 +9,17 @@ const picturesList = document.querySelector('.pictures');
 /**
  * Удаляет все изображения для последующей перерисовки
  */
-function deleteAllPictures() {
-  picturesList.querySelectorAll('.picture').forEach((el) => {
-    el.remove();
+const deleteAllPictures = () => {
+  picturesList.querySelectorAll('.picture').forEach((picture) => {
+    picture.remove();
   });
-}
+};
 
 /**
  * Создаёт миниатюры из аргумента фотографий
- * @param {array} photos - массив объектов фотографий
+ * @param {Array} photos - массив объектов фотографий
  */
-function drawMiniatures (photos) {
+const drawMiniatures = (photos) => {
   deleteAllPictures();
   photos.forEach((photoObject) => {
     const newPictureElement = pictureElement.cloneNode(true);
@@ -30,12 +30,12 @@ function drawMiniatures (photos) {
     pictureImg.src = photoObject.url;
     pictureImg.alt = photoObject.description;
 
-    newPictureElement.addEventListener('click', (evt) => handleOpenFullscreenImage(evt, photoObject));
+    newPictureElement.addEventListener('click', (event) => onPictureClick(event, photoObject));
 
     fragment.appendChild(newPictureElement);
   });
 
   picturesList.appendChild(fragment);
-}
+};
 
 export {drawMiniatures};

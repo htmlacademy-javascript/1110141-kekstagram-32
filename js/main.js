@@ -1,7 +1,7 @@
 import { getData } from './api.js';
 import { drawMiniatures } from './miniatures-draw.js';
 import { initUploadPhotoInput } from './photo-upload.js';
-import { initDocumentKeydown, showDataError, debounce, getFilteredPhotos, handleImageFiltersClick } from './util.js';
+import { initDocumentKeydown, showDataError, debounce, getFilteredPhotos, onImageFiltersClick } from './util.js';
 
 const TIMEOUT = 5000;
 const imgFilters = document.querySelector('.img-filters');
@@ -22,7 +22,7 @@ getData()
       drawMiniatures(filteredPhotos);
     });
 
-    imgFilters.addEventListener('click', (event) => handleImageFiltersClick(event, debouncedGetFilteredPhotos));
+    imgFilters.addEventListener('click', (event) => onImageFiltersClick(event, debouncedGetFilteredPhotos));
 
   }).catch(() => {
     // Если ошибка — показываем соответствующий блок
